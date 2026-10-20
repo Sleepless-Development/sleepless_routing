@@ -79,7 +79,7 @@ local name = Player(source).state.currentBucketName
 
 ## Debug
 
-`/setroute [name]` is registered only when `debug` is true in `config.lua`. It is ACE restricted (`command.setroute`). With no name, it returns the player to the global bucket. The release default is `false`.
+`/setroute [name]` is registered only when `debug` is true in `config.lua`. It requires the `command` permission. With no name, it returns the player to the global bucket. The release default is `false`.
 
 ## License
 
