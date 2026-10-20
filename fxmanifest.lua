@@ -6,14 +6,13 @@ game 'gta5'
 name 'sleepless_routing'
 author 'DemiAutomatic'
 description 'Named routing buckets and replicated player bucket state'
-version '1.0.0'
+version '1.0.1'
 
-shared_scripts {
-    '@ox_lib/init.lua',
-    'config.lua',
-}
+server_only 'yes'
 
 server_scripts {
+    '@ox_lib/init.lua',
+    'config.lua',
     'server/version.lua',
     'server/main.lua',
 }
