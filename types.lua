@@ -91,6 +91,53 @@ function exports.sleepless_routing:getPlayersInBucket(bucket) end
 function exports.sleepless_routing:triggerClientEventForBucket(eventName, bucket, ...) end
 
 --- `server`
+--- Registers a cluster name. An existing cluster is left as it is.
+---@param name string
+---@return boolean created `false` when `name` is empty
+function exports.sleepless_routing:createCluster(name) end
+
+--- `server`
+--- Forgets a cluster. Buckets in the cluster stay as they are, and players stay in those buckets.
+---@param name string
+---@return boolean
+function exports.sleepless_routing:removeCluster(name) end
+
+--- `server`
+--- Adds a bucket to a cluster. Accepts a bucket id or a registered name, and stores the numeric id.
+--- Adding a bucket that is already in the cluster returns `true`.
+---@param cluster string
+---@param bucket number | string
+---@return boolean
+function exports.sleepless_routing:addBucketToCluster(cluster, bucket) end
+
+--- `server`
+--- Removes a bucket from a cluster. Accepts a bucket id or a registered name.
+---@param cluster string
+---@param bucket number | string
+---@return boolean
+function exports.sleepless_routing:removeBucketFromCluster(cluster, bucket) end
+
+--- `server`
+--- Returns the bucket ids in a cluster, in the order they were added.
+---@param cluster string
+---@return number[] | nil bucketIds `nil` when the cluster is not registered
+function exports.sleepless_routing:getClusterBuckets(cluster) end
+
+--- `server`
+--- Returns the server ids of players whose live routing bucket is in the cluster.
+---@param cluster string
+---@return number[] | nil playerIds `nil` when the cluster is not registered
+function exports.sleepless_routing:getPlayersInCluster(cluster) end
+
+--- `server`
+--- Sends a client event to every player currently in any bucket in the cluster. Wraps `lib.triggerClientEvent`.
+--- An empty cluster still returns `true`. An unknown cluster returns `false`.
+---@param eventName string
+---@param cluster string
+---@return boolean
+function exports.sleepless_routing:triggerClientEventForCluster(eventName, cluster, ...) end
+
+--- `server`
 --- Forgets a bucket name. Players left inside that numeric bucket stay there, and their `currentBucketName` is cleared.
 ---@param name string
 ---@return boolean

@@ -13,6 +13,7 @@ Named routing buckets for FiveM. Put players in an instance without keeping your
 ## Features
 
 - Named buckets, created once and reused by name
+- Clusters group those buckets under one id
 - Global world on bucket `0`, hidden bucket on `1`
 - Replicated player state: `currentBucket`, `oldBucket`, `currentBucketName`
 - The player's vehicle and attached objects move with them
@@ -57,6 +58,18 @@ exports.sleepless_routing:routePlayerToGlobalBucket(source)
 Bucket `0` is the global world. Bucket `1` is the hidden bucket. Named buckets start at `2`.
 
 Other players in the same vehicle move with the player. A third argument on `requestBucketId` sets the entity lockdown mode (`inactive`, `relaxed`, `strict`, `no_dummy`, or `full`). `setBucketOptions` changes population or lockdown later. `moveEntityToBucket` places a server-side entity in a bucket id or a registered name. `getPlayersInBucket` lists who is there. `triggerClientEventForBucket(eventName, bucket, ...)` sends one client event to those players through `lib.triggerClientEvent`.
+
+`createCluster` groups bucket ids under a name. `addBucketToCluster` accepts a bucket id or a registered name and stores the numeric id. `triggerClientEventForCluster(eventName, cluster, ...)` sends one client event to every player in any of those buckets. `getPlayersInCluster` returns those server ids. Removing a bucket name does not change cluster membership. Pass the numeric id to `removeBucketFromCluster` after the name is gone.
+
+```lua
+exports.sleepless_routing:createCluster('hotel')
+exports.sleepless_routing:requestBucketId('hotel_lobby', false)
+exports.sleepless_routing:requestBucketId('hotel_floor_2', false)
+exports.sleepless_routing:addBucketToCluster('hotel', 'hotel_lobby')
+exports.sleepless_routing:addBucketToCluster('hotel', 'hotel_floor_2')
+
+exports.sleepless_routing:triggerClientEventForCluster('myresource:client:hotelAlert', 'hotel', message)
+```
 
 `currentBucket` updates when any script moves the player, including `qbx_core`'s bucket helper.
 

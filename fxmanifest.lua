@@ -5,7 +5,7 @@ game 'gta5'
 
 name 'sleepless_routing'
 author 'DemiAutomatic'
-description 'Named routing buckets and replicated player bucket state'
+description 'Named routing buckets, bucket clusters, and replicated player bucket state'
 version '1.0.1'
 
 server_only 'yes'

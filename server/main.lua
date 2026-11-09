@@ -15,6 +15,7 @@ local nextBucketId = 2
 
 local buckets = {}
 local bucketNames = {}
+local clusters = {}
 local routingPlayers = {}
 
 local addPlayerToBucket
@@ -264,16 +265,140 @@ local function getPlayersInBucket(bucket)
 end
 
 ---@param eventName string
----@param bucket number | string
+---@param playerIds number[] | nil
 ---@return boolean
-local function triggerClientEventForBucket(eventName, bucket, ...)
+local function triggerClientEventForPlayers(eventName, playerIds, ...)
     if type(eventName) ~= 'string' or eventName == '' then return false end
-
-    local playerIds = getPlayersInBucket(bucket)
     if not playerIds then return false end
 
     lib.triggerClientEvent(eventName, playerIds, ...)
     return true
+end
+
+---@param eventName string
+---@param bucket number | string
+---@return boolean
+local function triggerClientEventForBucket(eventName, bucket, ...)
+    if type(eventName) ~= 'string' or eventName == '' then return false end
+    return triggerClientEventForPlayers(eventName, getPlayersInBucket(bucket), ...)
+end
+
+---@param name string
+---@return boolean
+local function createCluster(name)
+    if type(name) ~= 'string' or name == '' then return false end
+    if clusters[name] then return true end
+
+    clusters[name] = {
+        buckets = {},
+        index = {},
+    }
+
+    return true
+end
+
+---@param name string
+---@return boolean
+local function removeCluster(name)
+    if type(name) ~= 'string' or not clusters[name] then return false end
+
+    clusters[name] = nil
+    return true
+end
+
+---@param cluster string
+---@param bucket number | string
+---@return boolean
+local function addBucketToCluster(cluster, bucket)
+    if type(cluster) ~= 'string' then return false end
+
+    local group = clusters[cluster]
+    if not group then return false end
+
+    local bucketId = resolveBucketId(bucket)
+    if bucketId == nil then return false end
+    if group.index[bucketId] then return true end
+
+    local count = #group.buckets + 1
+    group.buckets[count] = bucketId
+    group.index[bucketId] = count
+    return true
+end
+
+---@param cluster string
+---@param bucket number | string
+---@return boolean
+local function removeBucketFromCluster(cluster, bucket)
+    if type(cluster) ~= 'string' then return false end
+
+    local group = clusters[cluster]
+    if not group then return false end
+
+    local bucketId = resolveBucketId(bucket)
+    if bucketId == nil then return false end
+
+    local index = group.index[bucketId]
+    if not index then return false end
+
+    local count = #group.buckets
+    for i = index, count - 1 do
+        local nextBucketId = group.buckets[i + 1]
+        group.buckets[i] = nextBucketId
+        group.index[nextBucketId] = i
+    end
+
+    group.buckets[count] = nil
+    group.index[bucketId] = nil
+    return true
+end
+
+---@param cluster string
+---@return number[] | nil
+local function getClusterBuckets(cluster)
+    if type(cluster) ~= 'string' then return end
+
+    local group = clusters[cluster]
+    if not group then return end
+
+    local sourceBuckets = group.buckets
+    local list = {}
+    for i = 1, #sourceBuckets do
+        list[i] = sourceBuckets[i]
+    end
+
+    return list
+end
+
+---@param cluster string
+---@return number[] | nil
+local function getPlayersInCluster(cluster)
+    if type(cluster) ~= 'string' then return end
+
+    local group = clusters[cluster]
+    if not group then return end
+
+    local bucketIndex = group.index
+    local players = GetPlayers()
+    local occupants = {}
+    local count = 0
+
+    for i = 1, #players do
+        local playerId = tonumber(players[i])
+        if playerId and bucketIndex[GetPlayerRoutingBucket(playerId)] then
+            count += 1
+            occupants[count] = playerId
+        end
+    end
+
+    return occupants
+end
+
+---@param eventName string
+---@param cluster string
+---@return boolean
+local function triggerClientEventForCluster(eventName, cluster, ...)
+    if type(eventName) ~= 'string' or eventName == '' then return false end
+    return triggerClientEventForPlayers(eventName, getPlayersInCluster(cluster), ...)
 end
 
 local function clearBucketNameState(bucketId)
@@ -411,6 +536,13 @@ exports('getBucketId', getBucketId)
 exports('getBucketName', getBucketName)
 exports('getPlayersInBucket', getPlayersInBucket)
 exports('triggerClientEventForBucket', triggerClientEventForBucket)
+exports('createCluster', createCluster)
+exports('removeCluster', removeCluster)
+exports('addBucketToCluster', addBucketToCluster)
+exports('removeBucketFromCluster', removeBucketFromCluster)
+exports('getClusterBuckets', getClusterBuckets)
+exports('getPlayersInCluster', getPlayersInCluster)
+exports('triggerClientEventForCluster', triggerClientEventForCluster)
 exports('removeBucketId', removeBucketId)
 exports('moveEntityToBucket', moveEntityToBucket)
 exports('moveEntityToGlobalBucket', moveEntityToGlobalBucket)
